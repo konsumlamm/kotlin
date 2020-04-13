@@ -107,6 +107,8 @@ private fun readV1Config(element: Element): KotlinFacetSettings {
     }
 }
 
+// TODO: Introduce new version of facet serialization. See https://youtrack.jetbrains.com/issue/KT-38235
+//  This is necessary to avoid having too much custom logic for platform serialization.
 fun Element.getFacetPlatformByConfigurationElement(): TargetPlatform {
     val platformNames = getAttributeValue("allPlatforms")?.split('/')?.toSet()
     if (platformNames != null && platformNames.isNotEmpty()) {
@@ -320,6 +322,8 @@ private fun buildChildElement(element: Element, tag: String, bean: Any, filter: 
 private fun KotlinFacetSettings.writeLatestConfig(element: Element) {
     val filter = SkipDefaultsSerializationFilter()
 
+    // TODO: Introduce new version of facet serialization. See https://youtrack.jetbrains.com/issue/KT-38235
+    //  This is necessary to avoid having too much custom logic for platform serialization.
     targetPlatform?.let { targetPlatform ->
         element.setAttribute("platform", targetPlatform.oldFashionedDescription)
         element.setAttribute(

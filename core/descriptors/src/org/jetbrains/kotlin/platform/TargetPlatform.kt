@@ -57,8 +57,10 @@ open class TargetPlatform(val componentPlatforms: Set<SimplePlatform>) : Collect
  * Ideally, each specific subtype should be either a data class or singleton.
  */
 abstract class SimplePlatform(val platformName: String) {
-    override fun toString() =
-        targetName.takeIf(String::isNotEmpty)?.let { "$platformName ($it)" } ?: platformName
+    override fun toString(): String {
+        val targetName = targetName
+        return if (targetName.isNotEmpty()) "$platformName ($targetName)" else platformName
+    }
 
     // description of TargetPlatformVersion or name of custom platform-specific target; used in serialization
     open val targetName: String
