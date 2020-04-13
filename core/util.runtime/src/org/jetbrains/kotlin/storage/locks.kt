@@ -11,37 +11,51 @@ import java.util.concurrent.locks.ReentrantLock
 
 private const val CHECK_CANCELLATION_PERIOD_MS: Long = 50
 
-interface LockBlock {
-    fun <T> guarded(computable: () -> T): T
-}
+interface SimpleLock {
+    fun lock()
 
-object NoLockBlock : LockBlock {
-    override fun <Any> guarded(computable: () -> Any): Any {
-        return computable()
+    fun unlock()
+
+    companion object {
+        fun simpleLock(checkCancelled: (() -> Unit)? = null) =
+            checkCancelled?.let { CancellableSimpleLock(it) } ?: DefaultSimpleLock()
     }
 }
 
-class SimpleLock(val lock: Any = Object()) : LockBlock {
-    override fun <T> guarded(computable: () -> T): T =
-        // Use `synchronized` as dead lock case will be handled by JVM and would be immediately visible rather with ReentrantLock
-        synchronized(lock) {
-            computable()
-        }
+inline fun <T> SimpleLock.guarded(crossinline computable: () -> T): T {
+    lock()
+    return try {
+        computable()
+    } finally {
+        unlock()
+    }
 }
 
-class CancellableLock(val lock: Lock, val checkCancelled: () -> Unit) : LockBlock {
+object EmptySmartLock : SimpleLock {
+    override fun lock() {
+    }
+
+    override fun unlock() {
+    }
+}
+
+open class DefaultSimpleLock(protected val lock: Lock = ReentrantLock()) : SimpleLock {
+
+    override fun lock() = lock.lock()
+
+    override fun unlock() = lock.unlock()
+
+
+}
+
+class CancellableSimpleLock(lock: Lock, private val checkCancelled: () -> Unit) : DefaultSimpleLock(lock) {
     constructor(checkCancelled: () -> Unit) : this(checkCancelled = checkCancelled, lock = ReentrantLock())
 
-    override fun <T> guarded(computable: () -> T): T {
+    override fun lock() {
         while (!lock.tryLock(CHECK_CANCELLATION_PERIOD_MS, TimeUnit.MILLISECONDS)) {
             //ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
             checkCancelled()
         }
-
-        try {
-            return computable()
-        } finally {
-            lock.unlock()
-        }
     }
+
 }

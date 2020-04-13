@@ -38,7 +38,8 @@ import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticsElementsCache
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.resolve.lazy.ResolveSession
-import org.jetbrains.kotlin.storage.CancellableLock
+import org.jetbrains.kotlin.storage.CancellableSimpleLock
+import org.jetbrains.kotlin.storage.guarded
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.util.slicedMap.ReadOnlySlice
 import org.jetbrains.kotlin.util.slicedMap.WritableSlice
@@ -55,7 +56,7 @@ internal class PerFileAnalysisCache(val file: KtFile, componentProvider: Compone
     private val cache = HashMap<PsiElement, AnalysisResult>()
     private var fileResult: AnalysisResult? = null
     private val lock = ReentrantLock()
-    private val guardLock = CancellableLock(lock) {
+    private val guardLock = CancellableSimpleLock(lock) {
         ProgressIndicatorProvider.checkCanceled()
     }
 
