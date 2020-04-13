@@ -17,7 +17,7 @@ interface SimpleLock {
     fun unlock()
 
     companion object {
-        fun simpleLock(checkCancelled: (() -> Unit)? = null) =
+        fun simpleLock(checkCancelled: Runnable? = null) =
             checkCancelled?.let { CancellableSimpleLock(it) } ?: DefaultSimpleLock()
     }
 }
@@ -48,13 +48,13 @@ open class DefaultSimpleLock(protected val lock: Lock = ReentrantLock()) : Simpl
 
 }
 
-class CancellableSimpleLock(lock: Lock, private val checkCancelled: () -> Unit) : DefaultSimpleLock(lock) {
-    constructor(checkCancelled: () -> Unit) : this(checkCancelled = checkCancelled, lock = ReentrantLock())
+class CancellableSimpleLock(lock: Lock, private val checkCancelled: Runnable) : DefaultSimpleLock(lock) {
+    constructor(checkCancelled: Runnable) : this(checkCancelled = checkCancelled, lock = ReentrantLock())
 
     override fun lock() {
         while (!lock.tryLock(CHECK_CANCELLATION_PERIOD_MS, TimeUnit.MILLISECONDS)) {
             //ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
-            checkCancelled()
+            checkCancelled.run()
         }
     }
 
