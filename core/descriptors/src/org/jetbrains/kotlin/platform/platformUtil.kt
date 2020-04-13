@@ -7,13 +7,11 @@ package org.jetbrains.kotlin.platform
 
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 
-// WARNING: Use with care. Some component platforms, like NativePlatform, may co-exist in multiple instances inside the same TargetPlatform.
-// See also org.jetbrains.kotlin.platform.konan.NativePlatformKt.isNative
-inline fun <reified T : SimplePlatform> TargetPlatform.subplatformOfType(): T? = componentPlatforms.firstIsInstanceOrNull<T>()
-fun <T> TargetPlatform.subplatformOfType(klass: Class<T>): T? = componentPlatforms.filterIsInstance(klass).firstOrNull()
+inline fun <reified T : SimplePlatform> TargetPlatform.subplatformsOfType(): List<T> = componentPlatforms.filterIsInstance<T>()
+fun <T> TargetPlatform.subplatformsOfType(klass: Class<T>): List<T> = componentPlatforms.filterIsInstance(klass)
 
-inline fun <reified T : SimplePlatform> TargetPlatform?.has(): Boolean = this != null && subplatformOfType<T>() != null
-fun <T> TargetPlatform?.has(klass: Class<T>): Boolean = this != null && subplatformOfType(klass) != null
+inline fun <reified T : SimplePlatform> TargetPlatform?.has(): Boolean = this != null && subplatformsOfType<T>().isNotEmpty()
+fun <T> TargetPlatform?.has(klass: Class<T>): Boolean = this != null && subplatformsOfType(klass).isNotEmpty()
 
 
 /**
