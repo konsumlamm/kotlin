@@ -35,8 +35,6 @@ import org.jetbrains.kotlin.platform.DefaultIdeTargetPlatformKindProvider
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.idePlatformKind
 import org.jetbrains.kotlin.platform.js.JsPlatforms
-import org.jetbrains.kotlin.platform.konan.NativePlatformUnspecifiedTarget
-import org.jetbrains.kotlin.platform.konan.NativePlatformWithTarget
 import org.jetbrains.kotlin.utils.PathUtil
 import java.util.jar.Attributes
 import java.util.regex.Pattern
@@ -69,26 +67,13 @@ val PersistentLibraryKind<*>?.platform: TargetPlatform
         else -> DefaultIdeTargetPlatformKindProvider.defaultPlatform
     }
 
-/**
- * WARNING: This method returns only approximate library platform for KLIBs. To obtain the exact platform please
- * use [createLibraryInfo] and then get the platform from the first [LibraryInfo] in the list.
- *
- * Example (for Kotlin/Native):
- * - getLibraryPlatform(project, library) => [TargetPlatform] with single component [NativePlatformUnspecifiedTarget] (target is unknown)
- * - createLibraryInfo(project, library).first().platform => [TargetPlatform] with one or multiple [NativePlatformWithTarget]s inside
- */
-@Deprecated(
-    message = "This method returns only approximate library platform for KLIBs. Use 'createLibraryInfo(project, library).first().platform' instead.",
-    replaceWith = ReplaceWith(
-        "createLibraryInfo(project, library).first().platform",
-        "org.jetbrains.kotlin.idea.caches.project.createLibraryInfo"
-    ),
-)
 fun getLibraryPlatform(project: Project, library: Library): TargetPlatform {
-    if (library !is LibraryEx) return DefaultIdeTargetPlatformKindProvider.defaultPlatform
-    if (library.isDisposed) return DefaultIdeTargetPlatformKindProvider.defaultPlatform
+    if (library is LibraryEx && !library.isDisposed) {
+        val platform = createLibraryInfo(project, library).firstOrNull()?.platform
+        if (platform != null) return platform
+    }
 
-    return library.effectiveKind(project).platform
+    return DefaultIdeTargetPlatformKindProvider.defaultPlatform
 }
 
 fun detectLibraryKind(roots: Array<VirtualFile>): PersistentLibraryKind<*>? {

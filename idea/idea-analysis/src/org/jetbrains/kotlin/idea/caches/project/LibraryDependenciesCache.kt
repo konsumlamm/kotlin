@@ -73,7 +73,6 @@ class LibraryDependenciesCacheImpl(private val project: Project) : LibraryDepend
                 override fun visitLibraryOrderEntry(libraryOrderEntry: LibraryOrderEntry, value: Unit) {
                     val otherLibrary = libraryOrderEntry.library
                     if (otherLibrary is LibraryEx && !otherLibrary.isDisposed) {
-                        // TODO: create library info only on demand, when we know for sure that is has compatible platform
                         val otherLibraryInfos = createLibraryInfo(project, otherLibrary)
                         otherLibraryInfos.firstOrNull()?.platform?.let { otherLibraryPlatform ->
                             if (compatiblePlatforms(platform, otherLibraryPlatform)) {
