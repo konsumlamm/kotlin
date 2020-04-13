@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.idea.scripting.gradle.importing
 
 import com.intellij.openapi.components.service
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import org.gradle.tooling.model.kotlin.dsl.EditorReportSeverity
@@ -125,16 +126,14 @@ fun KotlinDslScriptModel.toScriptConfiguration(context: GradleKtsContext): Scrip
 }
 
 fun saveScriptModels(
-    resolverContext: ProjectResolverContext,
+    project: Project,
+    task: ExternalSystemTaskId,
+    javaHomeStr: String?,
     models: List<KotlinDslScriptModel>
 ) {
-    val task = resolverContext.externalSystemTaskId
-    val project = task.findProject() ?: return
-    val settings = resolverContext.settings ?: return
-
     val errorReporter = KotlinGradleDslErrorReporter(project, task)
 
-    val javaHome = settings.javaHome?.let { File(it) }
+    val javaHome = javaHomeStr?.let { File(it) }
     val context = GradleKtsContext(project, javaHome)
 
     models.forEach { model ->
