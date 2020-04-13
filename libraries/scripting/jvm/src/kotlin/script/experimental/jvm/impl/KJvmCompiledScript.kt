@@ -5,6 +5,7 @@
 
 package kotlin.script.experimental.jvm.impl
 
+import org.jetbrains.annotations.TestOnly
 import java.io.*
 import java.net.URL
 import java.net.URLClassLoader
@@ -43,15 +44,10 @@ internal class KJvmCompiledScriptData(
     }
 }
 
-interface IKJvmCompiledScript : CompiledScript {
-    var compiledModule: KJvmCompiledModule?
-    val scriptClassFQName: String
-}
-
 open class KJvmCompiledScript internal constructor(
     internal var data: KJvmCompiledScriptData,
-    override var compiledModule: KJvmCompiledModule? // module should be null for imported (other) scripts, so only one reference to the module is kept
-) : IKJvmCompiledScript, Serializable {
+    internal var compiledModule: KJvmCompiledModule? // module should be null for imported (other) scripts, so only one reference to the module is kept
+) : CompiledScript, Serializable {
 
     constructor(
         sourceLocationId: String?,
@@ -74,7 +70,7 @@ open class KJvmCompiledScript internal constructor(
     override val otherScripts: List<CompiledScript>
         get() = data.otherScripts
 
-    override val scriptClassFQName: String
+    val scriptClassFQName: String
         get() = data.scriptClassFQName
 
     override val resultField: Pair<String, KotlinType>?
@@ -98,6 +94,9 @@ open class KJvmCompiledScript internal constructor(
         )
     }
 
+    @TestOnly
+    fun getCompiledModule() = compiledModule
+
     private fun writeObject(outputStream: ObjectOutputStream) {
         outputStream.writeObject(data)
         outputStream.writeObject(compiledModule)
@@ -115,7 +114,7 @@ open class KJvmCompiledScript internal constructor(
     }
 }
 
-fun IKJvmCompiledScript.getOrCreateActualClassloader(evaluationConfiguration: ScriptEvaluationConfiguration): ClassLoader =
+fun KJvmCompiledScript.getOrCreateActualClassloader(evaluationConfiguration: ScriptEvaluationConfiguration): ClassLoader =
     evaluationConfiguration[ScriptEvaluationConfiguration.jvm.actualClassLoader] ?: run {
         val module = compiledModule
             ?: throw IllegalStateException("Illegal call sequence, actualClassloader should be set before calling function on the class without module")
