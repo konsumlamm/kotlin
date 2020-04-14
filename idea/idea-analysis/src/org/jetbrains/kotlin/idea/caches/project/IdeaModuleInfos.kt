@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.impl.ModuleOrderEntryImpl
+import com.intellij.openapi.roots.impl.libraries.LibraryEx
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
@@ -37,7 +38,8 @@ import org.jetbrains.kotlin.idea.caches.trackers.KotlinModuleOutOfCodeBlockModif
 import org.jetbrains.kotlin.idea.configuration.BuildSystemType
 import org.jetbrains.kotlin.idea.configuration.getBuildSystemType
 import org.jetbrains.kotlin.idea.core.isInTestSourceContentKotlinAware
-import org.jetbrains.kotlin.idea.framework.getLibraryPlatform
+import org.jetbrains.kotlin.idea.framework.effectiveKind
+import org.jetbrains.kotlin.idea.framework.platform
 import org.jetbrains.kotlin.idea.project.TargetPlatformDetector
 import org.jetbrains.kotlin.idea.project.findAnalyzerServices
 import org.jetbrains.kotlin.idea.project.getStableName
@@ -108,16 +110,20 @@ private fun orderEntryToModuleInfo(project: Project, orderEntry: OrderEntry, for
     }
 }
 
-val Project.libraryInfoCache: MutableMap<Library, List<LibraryInfo>>
+private val Project.libraryInfoCache: MutableMap<Library, List<LibraryInfo>>
     get() = cacheInvalidatingOnRootModifications { ContainerUtil.createConcurrentWeakMap() }
 
-fun createLibraryInfo(project: Project, library: Library): List<LibraryInfo> {
-    val cache = project.libraryInfoCache
+fun createLibraryInfo(project: Project, library: Library): List<LibraryInfo> =
+    project.libraryInfoCache.getOrPut(library) {
+        val approximatePlatform = if (library is LibraryEx && !library.isDisposed) {
+            // for Native returns 'unspecifiedNativePlatform', thus "approximate"
+            library.effectiveKind(project).platform
+        } else {
+            DefaultIdeTargetPlatformKindProvider.defaultPlatform
+        }
 
-    return cache.getOrPut(library) {
-        getLibraryPlatform(project, library).idePlatformKind.resolution.createLibraryInfo(project, library)
+        approximatePlatform.idePlatformKind.resolution.createLibraryInfo(project, library)
     }
-}
 
 private fun OrderEntry.acceptAsDependency(forProduction: Boolean): Boolean {
     return this !is ExportableOrderEntry
@@ -299,7 +305,7 @@ private class ModuleTestSourceScope(module: Module) : ModuleSourceScope(module) 
     override fun toString() = "ModuleTestSourceScope($module)"
 }
 
-open class LibraryInfo(override val project: Project, val library: Library) : IdeaModuleInfo, LibraryModuleInfo, BinaryModuleInfo {
+abstract class LibraryInfo(override val project: Project, val library: Library) : IdeaModuleInfo, LibraryModuleInfo, BinaryModuleInfo {
     override val moduleOrigin: ModuleOrigin
         get() = ModuleOrigin.LIBRARY
 
@@ -322,8 +328,7 @@ open class LibraryInfo(override val project: Project, val library: Library) : Id
         return result.toList()
     }
 
-    override val platform: TargetPlatform
-        get() = getLibraryPlatform(project, library)
+    abstract override val platform: TargetPlatform // must override
 
     override val analyzerServices: PlatformDependentAnalyzerServices
         get() = platform.findAnalyzerServices(project)
@@ -331,18 +336,23 @@ open class LibraryInfo(override val project: Project, val library: Library) : Id
     override val sourcesModuleInfo: SourceForBinaryModuleInfo
         get() = LibrarySourceInfo(project, library, this)
 
-    override fun getLibraryRoots(): Collection<String> =
-        library.getFiles(OrderRootType.CLASSES).mapNotNull(PathUtil::getLocalPath)
-
-    override fun toString() = "LibraryInfo(libraryName=${library.name})"
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return (other is LibraryInfo && library == other.library)
     }
 
     override fun hashCode(): Int = 43 * library.hashCode()
+}
 
+class NonKlibLibraryInfo(
+    project: Project,
+    library: Library,
+    override val platform: TargetPlatform
+) : LibraryInfo(project, library) {
+    override fun getLibraryRoots(): Collection<String> =
+        library.getFiles(OrderRootType.CLASSES).mapNotNull(PathUtil::getLocalPath)
+
+    override fun toString() = "NonKlibLibraryInfo(libraryName=${library.name})"
 }
 
 data class LibrarySourceInfo(override val project: Project, val library: Library, override val binariesModuleInfo: BinaryModuleInfo) :

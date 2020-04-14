@@ -16,9 +16,7 @@
 
 package org.jetbrains.kotlin.idea.framework
 
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.OrderRootType
-import com.intellij.openapi.roots.impl.libraries.LibraryEx
 import com.intellij.openapi.roots.libraries.DummyLibraryProperties
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.PersistentLibraryKind
@@ -26,8 +24,6 @@ import com.intellij.openapi.util.io.JarUtil
 import com.intellij.openapi.vfs.*
 import org.jetbrains.kotlin.caches.resolve.IdePlatformKindResolution
 import org.jetbrains.kotlin.caches.resolve.resolution
-import org.jetbrains.kotlin.idea.caches.project.LibraryInfo
-import org.jetbrains.kotlin.idea.caches.project.createLibraryInfo
 import org.jetbrains.kotlin.idea.vfilefinder.KnownLibraryKindForIndex
 import org.jetbrains.kotlin.idea.vfilefinder.getLibraryKindForJar
 import org.jetbrains.kotlin.platform.CommonPlatforms
@@ -66,15 +62,6 @@ val PersistentLibraryKind<*>?.platform: TargetPlatform
         is KotlinLibraryKind -> this.compilerPlatform
         else -> DefaultIdeTargetPlatformKindProvider.defaultPlatform
     }
-
-fun getLibraryPlatform(project: Project, library: Library): TargetPlatform {
-    if (library is LibraryEx && !library.isDisposed) {
-        val platform = createLibraryInfo(project, library).firstOrNull()?.platform
-        if (platform != null) return platform
-    }
-
-    return DefaultIdeTargetPlatformKindProvider.defaultPlatform
-}
 
 fun detectLibraryKind(roots: Array<VirtualFile>): PersistentLibraryKind<*>? {
     val jarFile = roots.firstOrNull() ?: return null
