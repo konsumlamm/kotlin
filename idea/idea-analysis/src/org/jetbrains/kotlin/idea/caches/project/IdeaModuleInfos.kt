@@ -14,6 +14,7 @@ import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.impl.ModuleOrderEntryImpl
 import com.intellij.openapi.roots.impl.libraries.LibraryEx
 import com.intellij.openapi.roots.libraries.Library
+import com.intellij.openapi.roots.libraries.PersistentLibraryKind
 import com.intellij.openapi.util.ModificationTracker
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
@@ -39,7 +40,7 @@ import org.jetbrains.kotlin.idea.configuration.BuildSystemType
 import org.jetbrains.kotlin.idea.configuration.getBuildSystemType
 import org.jetbrains.kotlin.idea.core.isInTestSourceContentKotlinAware
 import org.jetbrains.kotlin.idea.framework.effectiveKind
-import org.jetbrains.kotlin.idea.framework.platform
+import org.jetbrains.kotlin.idea.framework.idePlatformKind
 import org.jetbrains.kotlin.idea.project.TargetPlatformDetector
 import org.jetbrains.kotlin.idea.project.findAnalyzerServices
 import org.jetbrains.kotlin.idea.project.getStableName
@@ -48,11 +49,8 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinSourceFilterScope
 import org.jetbrains.kotlin.idea.util.isInSourceContentWithoutInjected
 import org.jetbrains.kotlin.idea.util.rootManager
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.platform.DefaultIdeTargetPlatformKindProvider
-import org.jetbrains.kotlin.platform.TargetPlatform
+import org.jetbrains.kotlin.platform.*
 import org.jetbrains.kotlin.platform.compat.toOldPlatform
-import org.jetbrains.kotlin.platform.idePlatformKind
-import org.jetbrains.kotlin.platform.isCommon
 import org.jetbrains.kotlin.platform.js.isJs
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.platform.jvm.isJvm
@@ -115,14 +113,11 @@ private val Project.libraryInfoCache: MutableMap<Library, List<LibraryInfo>>
 
 fun createLibraryInfo(project: Project, library: Library): List<LibraryInfo> =
     project.libraryInfoCache.getOrPut(library) {
-        val approximatePlatform = if (library is LibraryEx && !library.isDisposed) {
-            // for Native returns 'unspecifiedNativePlatform', thus "approximate"
-            library.effectiveKind(project).platform
-        } else {
-            DefaultIdeTargetPlatformKindProvider.defaultPlatform
-        }
+        val libraryKind: PersistentLibraryKind<*>? = if (library is LibraryEx && !library.isDisposed) {
+            library.effectiveKind(project)
+        } else null
 
-        approximatePlatform.idePlatformKind.resolution.createLibraryInfo(project, library)
+        libraryKind.idePlatformKind.resolution.createLibraryInfo(project, library)
     }
 
 private fun OrderEntry.acceptAsDependency(forProduction: Boolean): Boolean {

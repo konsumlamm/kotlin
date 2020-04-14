@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.idea.caches.project.IdeaModuleInfo
 import org.jetbrains.kotlin.idea.caches.project.ModuleTestSourceInfo
 import org.jetbrains.kotlin.idea.framework.CommonLibraryKind
 import org.jetbrains.kotlin.idea.framework.JSLibraryKind
-import org.jetbrains.kotlin.idea.framework.platform
+import org.jetbrains.kotlin.idea.framework.idePlatformKind
 import org.jetbrains.kotlin.idea.test.PluginTestCaseBase.*
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
 import org.jetbrains.kotlin.idea.util.getProjectJdkTableSafe
@@ -442,7 +442,7 @@ class IdeaModuleInfoTest : ModuleTestCase() {
     private val LibraryEx.classes: LibraryInfo
         get() = object : LibraryInfo(project!!, this) {
             override val platform: TargetPlatform
-                get() = kind.platform
+                get() = kind.idePlatformKind.defaultPlatform
         }
 
     private fun module(name: String, hasProductionRoot: Boolean = true, hasTestRoot: Boolean = true): Module {

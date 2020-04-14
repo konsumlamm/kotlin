@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.idea.test.allKotlinFiles
 import org.jetbrains.kotlin.idea.util.application.executeWriteCommand
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
 import org.jetbrains.kotlin.idea.util.projectStructure.sdk
+import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.samWithReceiver.SamWithReceiverCommandLineProcessor.Companion.ANNOTATION_OPTION
 import org.jetbrains.kotlin.samWithReceiver.SamWithReceiverCommandLineProcessor.Companion.PLUGIN_ID
 import org.jetbrains.kotlin.test.JUnit3WithIdeaConfigurationRunner
@@ -315,7 +316,7 @@ open class MultiModuleHighlightingTest : AbstractMultiModuleHighlightingTest() {
     private fun Module.makeJsModule() {
         setupKotlinFacet {
             settings.compilerArguments = K2JSCompilerArguments()
-            settings.targetPlatform = JSLibraryKind.compilerPlatform
+            settings.targetPlatform = JsPlatforms.defaultJsPlatform
         }
     }
 }

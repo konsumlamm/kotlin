@@ -11,9 +11,7 @@ import com.intellij.openapi.roots.libraries.DummyLibraryProperties
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.PersistentLibraryKind
 import com.intellij.openapi.roots.ui.configuration.libraries.CustomLibraryDescription
-import com.intellij.psi.util.parentOfType
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
-import org.jetbrains.kotlin.config.KotlinFacetSettingsProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.gradle.KotlinPlatform
 import org.jetbrains.kotlin.idea.caches.project.isTestModule
@@ -23,10 +21,11 @@ import org.jetbrains.kotlin.idea.isMainFunction
 import org.jetbrains.kotlin.idea.platform.IdePlatformKindTooling
 import org.jetbrains.kotlin.idea.platform.getGenericTestIcon
 import org.jetbrains.kotlin.idea.util.module
+import org.jetbrains.kotlin.platform.IdePlatformKind
 import org.jetbrains.kotlin.platform.impl.NativeIdePlatformKind
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
-import org.jetbrains.kotlin.platform.TargetPlatform
+import org.jetbrains.kotlin.platform.idePlatformKind
 import org.jetbrains.kotlin.platform.konan.NativePlatforms
 import javax.swing.Icon
 
@@ -82,8 +81,8 @@ class NativeIdePlatformKindTooling : IdePlatformKindTooling() {
 }
 
 object NativeLibraryKind : PersistentLibraryKind<DummyLibraryProperties>("kotlin.native"), KotlinLibraryKind {
-    override val compilerPlatform: TargetPlatform
-        get() = NativePlatforms.unspecifiedNativePlatform
+    override val idePlatformKind: IdePlatformKind<*>
+        get() = NativePlatforms.unspecifiedNativePlatform.idePlatformKind
 
     override fun createDefaultProperties() = DummyLibraryProperties.INSTANCE!!
 }
