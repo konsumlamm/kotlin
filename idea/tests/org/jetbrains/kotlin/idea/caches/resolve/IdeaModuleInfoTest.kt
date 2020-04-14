@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.idea.framework.platform
 import org.jetbrains.kotlin.idea.test.PluginTestCaseBase.*
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
 import org.jetbrains.kotlin.idea.util.getProjectJdkTableSafe
+import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.test.JUnit3WithIdeaConfigurationRunner
 import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.util.addDependency
@@ -439,7 +440,10 @@ class IdeaModuleInfoTest : ModuleTestCase() {
         get() = testSourceInfo()!!
 
     private val LibraryEx.classes: LibraryInfo
-        get() = NonKlibLibraryInfo(project!!, this, kind.platform)
+        get() = object : LibraryInfo(project!!, this) {
+            override val platform: TargetPlatform
+                get() = kind.platform
+        }
 
     private fun module(name: String, hasProductionRoot: Boolean = true, hasTestRoot: Boolean = true): Module {
         return createModuleFromTestData(createTempDirectory().absolutePath, name, StdModuleTypes.JAVA, false).apply {

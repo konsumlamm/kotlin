@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.idea.caches.project.LibraryInfo
-import org.jetbrains.kotlin.idea.caches.project.NonKlibLibraryInfo
 import org.jetbrains.kotlin.idea.caches.project.SdkInfo
 import org.jetbrains.kotlin.idea.caches.resolve.BuiltInsCacheKey
 import org.jetbrains.kotlin.idea.framework.JSLibraryKind
@@ -76,7 +75,7 @@ class JsPlatformKindResolution : IdePlatformKindResolution {
                 JsKlibLibraryInfo(project, library, path)
             }
         } else {
-            listOf(NonKlibLibraryInfo(project, library, JsPlatforms.defaultJsPlatform))
+            listOf(JsMetadataLibraryInfo(project, library))
         }
     }
 
@@ -110,6 +109,11 @@ class JsPlatformKindResolution : IdePlatformKindResolution {
 }
 
 class JsKlibLibraryInfo(project: Project, library: Library, libraryRoot: String) : AbstractKlibLibraryInfo(project, library, libraryRoot) {
+    override val platform: TargetPlatform
+        get() = JsPlatforms.defaultJsPlatform
+}
+
+class JsMetadataLibraryInfo(project: Project, library: Library) : LibraryInfo(project, library) {
     override val platform: TargetPlatform
         get() = JsPlatforms.defaultJsPlatform
 }

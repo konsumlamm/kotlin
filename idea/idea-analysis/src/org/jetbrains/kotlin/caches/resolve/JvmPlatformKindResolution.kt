@@ -18,7 +18,6 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.jvm.JvmBuiltIns
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.idea.caches.project.LibraryInfo
-import org.jetbrains.kotlin.idea.caches.project.NonKlibLibraryInfo
 import org.jetbrains.kotlin.idea.caches.project.SdkInfo
 import org.jetbrains.kotlin.idea.caches.resolve.BuiltInsCacheKey
 import org.jetbrains.kotlin.platform.TargetPlatform
@@ -45,7 +44,7 @@ class JvmPlatformKindResolution : IdePlatformKindResolution {
         get() = null
 
     override fun createLibraryInfo(project: Project, library: Library): List<LibraryInfo> =
-        listOf(NonKlibLibraryInfo(project, library, JvmPlatforms.defaultJvmPlatform))
+        listOf(JvmLibraryInfo(project, library))
 
     override val kind get() = JvmIdePlatformKind
 
@@ -61,4 +60,9 @@ class JvmPlatformKindResolution : IdePlatformKindResolution {
     }
 
     data class CacheKeyBySdk(val sdk: Sdk) : BuiltInsCacheKey
+}
+
+class JvmLibraryInfo(project: Project, library: Library) : LibraryInfo(project, library) {
+    override val platform: TargetPlatform
+        get() = JvmPlatforms.defaultJvmPlatform
 }

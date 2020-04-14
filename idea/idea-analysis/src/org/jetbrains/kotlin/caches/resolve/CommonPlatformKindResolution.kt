@@ -23,7 +23,6 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.idea.caches.project.LibraryInfo
-import org.jetbrains.kotlin.idea.caches.project.NonKlibLibraryInfo
 import org.jetbrains.kotlin.idea.caches.project.SdkInfo
 import org.jetbrains.kotlin.idea.caches.resolve.BuiltInsCacheKey
 import org.jetbrains.kotlin.idea.framework.CommonLibraryKind
@@ -70,7 +69,7 @@ class CommonPlatformKindResolution : IdePlatformKindResolution {
             }
         } else {
             // No klib files <=> old metadata-library <=> create usual LibraryInfo
-            listOf(NonKlibLibraryInfo(project, library, CommonPlatforms.defaultCommonPlatform))
+            listOf(CommonMetadataLibraryInfo(project, library))
         }
     }
 
@@ -116,9 +115,16 @@ class CommonPlatformKindResolution : IdePlatformKindResolution {
     }
 }
 
-class CommonKlibLibraryInfo(project: Project, library: Library, libraryRoot: String) :
-    AbstractKlibLibraryInfo(project, library, libraryRoot) {
+class CommonKlibLibraryInfo(
+    project: Project,
+    library: Library,
+    libraryRoot: String
+) : AbstractKlibLibraryInfo(project, library, libraryRoot) {
+    override val platform: TargetPlatform
+        get() = CommonPlatforms.defaultCommonPlatform
+}
 
+class CommonMetadataLibraryInfo(project: Project, library: Library) : LibraryInfo(project, library) {
     override val platform: TargetPlatform
         get() = CommonPlatforms.defaultCommonPlatform
 }

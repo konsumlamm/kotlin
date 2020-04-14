@@ -336,23 +336,17 @@ abstract class LibraryInfo(override val project: Project, val library: Library) 
     override val sourcesModuleInfo: SourceForBinaryModuleInfo
         get() = LibrarySourceInfo(project, library, this)
 
+    override fun getLibraryRoots(): Collection<String> =
+        library.getFiles(OrderRootType.CLASSES).mapNotNull(PathUtil::getLocalPath)
+
+    override fun toString() = "${this::class.simpleName}(libraryName=${library.name}, libraryRoots=${getLibraryRoots()})"
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         return (other is LibraryInfo && library == other.library)
     }
 
     override fun hashCode(): Int = 43 * library.hashCode()
-}
-
-class NonKlibLibraryInfo(
-    project: Project,
-    library: Library,
-    override val platform: TargetPlatform
-) : LibraryInfo(project, library) {
-    override fun getLibraryRoots(): Collection<String> =
-        library.getFiles(OrderRootType.CLASSES).mapNotNull(PathUtil::getLocalPath)
-
-    override fun toString() = "NonKlibLibraryInfo(libraryName=${library.name})"
 }
 
 data class LibrarySourceInfo(override val project: Project, val library: Library, override val binariesModuleInfo: BinaryModuleInfo) :
