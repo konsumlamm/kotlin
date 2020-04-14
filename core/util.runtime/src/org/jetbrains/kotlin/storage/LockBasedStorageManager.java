@@ -53,7 +53,7 @@ public class LockBasedStorageManager implements StorageManager {
         RuntimeException handleException(@NotNull Throwable throwable);
     }
 
-    public static final StorageManager NO_LOCKS = new LockBasedStorageManager("NO_LOCKS", ExceptionHandlingStrategy.THROW, EmptySmartLock.INSTANCE) {
+    public static final StorageManager NO_LOCKS = new LockBasedStorageManager("NO_LOCKS", ExceptionHandlingStrategy.THROW, EmptySimpleLock.INSTANCE) {
         @NotNull
         @Override
         protected <T> RecursionDetectedResult<T> recursionDetectedDefault() {

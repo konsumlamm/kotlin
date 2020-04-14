@@ -31,7 +31,7 @@ inline fun <T> SimpleLock.guarded(crossinline computable: () -> T): T {
     }
 }
 
-object EmptySmartLock : SimpleLock {
+object EmptySimpleLock : SimpleLock {
     override fun lock() {
     }
 
@@ -44,7 +44,6 @@ open class DefaultSimpleLock(protected val lock: Lock = ReentrantLock()) : Simpl
     override fun lock() = lock.lock()
 
     override fun unlock() = lock.unlock()
-
 
 }
 
